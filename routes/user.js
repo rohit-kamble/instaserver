@@ -6,15 +6,17 @@ const Post = mongoose.model("Post")
 const User = mongoose.model("User")
 
 router.get('/user/:id',requireLogin, (req,res)=>{
+  // console.log("req user**", req)
   User.findOne({_id: req.params.id})
   .select("-password")
   .then(user=>{
       Post.find({postedBy: req.params.id})
-      // .populate("postedBy","_id name")
+      .populate("postedBy","_id, name")
       .exec((err, posts)=>{
         if(err){
           return res.status(422).json({error: err})
         }
+        console.log("postes**",user, posts)
         res.json({user,posts})
       })
   })
@@ -24,7 +26,7 @@ router.get('/user/:id',requireLogin, (req,res)=>{
 })
 
 router.put('/follow', requireLogin, (req,res)=>{
-  console.log("req**", req.user._id)
+  // console.log("req follow**", req.user._id)
   User.findByIdAndUpdate(req.body.follower, {
     $push: {followers: req.user._id}
   },{
@@ -33,7 +35,7 @@ router.put('/follow', requireLogin, (req,res)=>{
     if(err) {
       return res.status(422).json({error: err})
     }
-    console.log("req.iuser==", req.body)
+    // console.log("req.iuser==", req.body)
     User.findByIdAndUpdate(req.user._id,{
       $push: {following: req.body.follower}
      }, {
@@ -42,7 +44,7 @@ router.put('/follow', requireLogin, (req,res)=>{
      )
      .select("-password")
     //  .populate("postedBy","_id name")
-     .then(result=>res.json(result))
+     .then(result=>{res.json(result); console.log("result**", result)})
      .catch(err=>{
        return res.status(422).json({error: err})
      })
@@ -50,7 +52,7 @@ router.put('/follow', requireLogin, (req,res)=>{
 })
 
 router.put('/unfollow', requireLogin, (req,res)=>{
-  console.log("req**", req.user)
+  // console.log("req**", req.user)
   User.findByIdAndUpdate(req.body.unfollowId, {
     $pull: {followers: req.user._id}
   },{
